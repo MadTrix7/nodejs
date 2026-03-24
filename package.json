@@ -6,6 +6,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@notionhq/client": "^2.2.15",
     "axios": "^1.7.9",
     "express": "^4.21.2"
   }
