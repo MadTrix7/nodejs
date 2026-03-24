@@ -45,7 +45,7 @@ app.post("/webhook", async (req, res) => {
         to: from,
         type: "text",
         text: {
-          body: "Mathéo OS actif 🚀",
+          body: "Mathéo non actif 🚀",
         },
       },
       {
