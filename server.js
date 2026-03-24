@@ -4,9 +4,14 @@ const axios = require("axios");
 const app = express();
 app.use(express.json());
 
+const PORT = process.env.PORT || 3000;
 const VERIFY_TOKEN = "matheo_os_123";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+
+app.get("/", (req, res) => {
+  res.status(200).send("Mathéo OS is running");
+});
 
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
@@ -16,20 +21,22 @@ app.get("/webhook", (req, res) => {
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
     return res.status(200).send(challenge);
   }
+
   return res.sendStatus(403);
 });
 
 app.post("/webhook", async (req, res) => {
   try {
-    const message =
-      req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    const message = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
 
-    if (!message) return res.sendStatus(200);
+    if (!message) {
+      return res.sendStatus(200);
+    }
 
     const from = message.from;
-    const text = message.text?.body;
+    const text = message.text?.body || "";
 
-    console.log("Message reçu:", text);
+    console.log("Message reçu :", text);
 
     await axios.post(
       `https://graph.facebook.com/v22.0/${PHONE_NUMBER_ID}/messages`,
@@ -37,7 +44,9 @@ app.post("/webhook", async (req, res) => {
         messaging_product: "whatsapp",
         to: from,
         type: "text",
-        text: { body: "Mathéo OS actif 🚀" },
+        text: {
+          body: "Mathéo OS actif 🚀",
+        },
       },
       {
         headers: {
@@ -47,11 +56,16 @@ app.post("/webhook", async (req, res) => {
       }
     );
 
-    res.sendStatus(200);
+    return res.sendStatus(200);
   } catch (error) {
-    console.error(error);
-    res.sendStatus(500);
+    console.error(
+      "Erreur webhook:",
+      error.response?.data || error.message || error
+    );
+    return res.sendStatus(500);
   }
 });
 
-app.listen(process.env.PORT || 3000);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});
